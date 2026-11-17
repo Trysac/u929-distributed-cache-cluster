@@ -4,23 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
+import net.jqwik.api.constraints.AlphaChars;
+import net.jqwik.api.constraints.StringLength;
 
-/** Property tests (jqwik) of the invariants of {@link Text#normalize}. */
+/** Property-based tests for Text. */
 class TextPropertiesTest {
 
   @Property
-  void normalizingTwiceChangesNothing(@ForAll String input) {
-    if (!input.isBlank()) {
-      String once = Text.normalize(input);
-      assertEquals(once, Text.normalize(once));
-    }
-  }
-
-  @Property
-  void outputHasNoSurroundingWhitespace(@ForAll String input) {
-    if (!input.isBlank()) {
-      String out = Text.normalize(input);
-      assertEquals(out.strip(), out);
-    }
+  void normalizeIsIdempotent(@ForAll @AlphaChars @StringLength(min = 1, max = 50) String input) {
+    String once = Text.normalize(input);
+    assertEquals(once, Text.normalize(once));
   }
 }

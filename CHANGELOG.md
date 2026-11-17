@@ -9,4 +9,5 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- Added `HashRing`, `Transport`, `SimulatedNetwork`, `NetworkFaults`, `CacheNode`, `ClusterConfig`, and `CacheException` implementing consistent hashing, SWIM membership, quorum replication with read repair, and batch rebalancing.
 - Initial project structure from the factory utility template.

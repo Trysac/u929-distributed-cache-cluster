@@ -1,49 +1,42 @@
 # distributed-cache-cluster
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![CI](https://github.com/Trysac/u929-distributed-cache-cluster/actions/workflows/ci.yml/badge.svg)](https://github.com/Trysac/u929-distributed-cache-cluster/actions/workflows/ci.yml)
+Teams that build a replicated cache learn that the hard part is not the hash map but membership, replica placement and rebalancing when a node dies, and those bugs only show under partitions and message loss. Testing that on real machines is slow and not reproducible. This library implements the cluster logic against a transport interface and ships a deterministic simulated network, so every fault scenario is a seeded, replayable test.
 
-Replicated in-memory cache cluster with consistent hashing, SWIM-style gossip membership, quorum reads and writes and rebalancing, tested under a seeded fault-injecting network simulator
-
-## Problem
-
-Describe in two or three sentences the concrete problem this utility solves, who hits it, and what
-they do today without it. Replace this paragraph when the first real feature lands.
-
-## Install
-
-Maven coordinates `io.github.trysac:distributed-cache-cluster`. Until it is published to Maven Central, build
-it from a release tag with `mvn install`, then declare:
+## Installation
 
 ```xml
 <dependency>
   <groupId>io.github.trysac</groupId>
   <artifactId>distributed-cache-cluster</artifactId>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
 </dependency>
 ```
-
-Requires Java 21 or newer. No dependencies outside the standard library.
 
 ## Usage
 
 ```java
-import io.github.trysac.distributed_cache_cluster.Text;
-
-// normalize trims surrounding whitespace and lower-cases the text.
-String name = Text.normalize("  Hello World "); // "hello world"
-
-// Blank input is rejected explicitly instead of returning an empty string.
-Text.normalize("   "); // throws BlankInputException ("input is blank")
+SimulatedNetwork net = new SimulatedNetwork(42L, new NetworkFaults(0.0, 0));
+ClusterConfig cfg = new ClusterConfig(3, 2, 2, 128, 3, 5, 100_000, 10);
+CacheNode n1 = new CacheNode("n1", net, cfg);
+CacheNode n2 = new CacheNode("n2", net, cfg);
+CacheNode n3 = new CacheNode("n3", net, cfg);
+n1.join("n1");
+n2.join("n1");
+n3.join("n1");
+for (int i = 0; i < 10; i++) net.tick();
 ```
 
-## Documentation
+## Public API
 
-- [Architecture](docs/ARCHITECTURE.md) and [decisions](docs/decisions/)
-- [Testing](docs/TESTING.md) and [security](docs/SECURITY.md)
-- [Project record](docs/PROJECT.md) and [stack](docs/STACK.md)
-- [Changelog](CHANGELOG.md) and [contributing guide](CONTRIBUTING.md)
+- **`CacheNode`**: Core interface for cache operations. 
+    - `put(byte[] key, byte[] value)`: Writes data (limited to 1,024 byte keys and 1,048,576 byte values). Throws `CacheException` (e.g., `key_too_large`, `value_too_large`, `quorum_unavailable`, `node_full`, `not_joined`).
+    - `get(byte[] key)`: Reads data, returns `Optional<byte[]>`. 
+- **`SimulatedNetwork`**: Deterministic transport implementation. Use `tick()` to advance simulation time, `partition()` to create splits, and `crash()` to simulate failures.
+- **`HashRing`**: Helper for consistent hashing management.
+- **`ClusterConfig`**: Immutable configuration for N, W, R, virtual nodes, and timeout settings.
 
-## License
+## Why not Hazelcast or Infinispan?
 
-[MIT](LICENSE) (c) 2026 Miguel Gomez
+They are powerful, heavy, and complex. This is a small, readable implementation whose fault scenarios are deterministic tests, ideal for understanding distributed systems internals.
+
+See [docs/SECURITY.md](docs/SECURITY.md) for vulnerability reporting and security model.

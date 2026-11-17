@@ -2,24 +2,17 @@
 
 ## Threat model
 
-`io.github.trysac:distributed-cache-cluster` is a pure library without I/O. The main risks are:
+`io.github.trysac:distributed-cache-cluster` is a library without I/O and does not perform network operations on its own. 
 
-- **Supply chain**: a compromised dependency, Maven plugin or CI action. Mitigation: standard
-  library only, every plugin and dependency pinned to an exact version in `pom.xml`, OSV-Scanner
-  over every artifact Maven resolves and over `pom.xml` in the gates, Dependabot weekly updates,
-  actions pinned by commit SHA, minimal workflow permissions.
-- **Leaked secrets**: tokens committed by mistake. Mitigation: `gitleaks` runs in the local gates
-  and in CI; `.env` files are git-ignored.
-- **Insecure code**: command injection, unsafe deserialization, disabled TLS verification.
-  Mitigation: Error Prone and javac `-Xlint:all` with warnings as errors, and the factory's Semgrep
-  rules (`.semgrep/factory-rules.yml`, `nosemgrep` ignored); fix the code instead of silencing it.
-- **Untrusted input**: callers may pass hostile strings. Mitigation: validate input and throw
-  explicit, documented exceptions; never deserialize untrusted bytes with `ObjectInputStream`;
-  never start a shell with untrusted data.
+### Defended
 
-## Publishing
+- **Supply chain attacks**: Standard library only, dependencies pinned.
+- **Secrets leaking**: `gitleaks` prevents commits.
+- **Input validation**: `CacheNode` explicitly rejects blank IDs and input exceeding limits (`key > 1024 bytes`, `value > 1048576 bytes`).
 
-Releases are git tags; publishing to Maven Central needs a namespace account and a signing key,
-which are never stored in the repository.
+### Not defended
 
-To report a vulnerability, see [SECURITY.md](../SECURITY.md).
+- **Untrusted data deserialization**: Callers are responsible for the contents of `byte[]` arrays passed to `put`. Never pass untrusted, serialized objects directly without validation.
+- **System security**: The simulator is designed for testing and assumes the host environment is trusted.
+
+To report a vulnerability, please check the repository metadata or contact the maintainer.
