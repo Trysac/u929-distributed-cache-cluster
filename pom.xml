@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Factory-owned file: agents must not edit it. Dependencies are added by the factory
+     (java scripts/AddDependency.java), and every plugin is pinned to an exact version. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.github.trysac</groupId>
+  <artifactId>distributed-cache-cluster</artifactId>
+  <version>0.1.0</version>
+  <packaging>jar</packaging>
+
+  <name>distributed-cache-cluster</name>
+  <description>Replicated in-memory cache cluster with consistent hashing, SWIM-style gossip membership, quorum reads and writes and rebalancing, tested under a seeded fault-injecting network simulator</description>
+  <url>https://github.com/Trysac/u929-distributed-cache-cluster</url>
+  <licenses>
+    <license>
+      <name>MIT</name>
+      <url>https://opensource.org/license/mit</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Miguel Gomez</name>
+    </developer>
+  </developers>
+  <scm>
+    <url>https://github.com/Trysac/u929-distributed-cache-cluster</url>
+  </scm>
+
+  <properties>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <!-- Build output; the gates image moves it out of the mounted repository (profile fabrica-build-dir). -->
+    <fabrica.buildDir>${project.basedir}/target</fabrica.buildDir>
+    <!-- CI-only conformance tier: tests tagged @Tag("conformance") are excluded unless scripts/Check.java runs
+         with FABRICA_CI=1, which replaces this value. -->
+    <fabrica.excludedGroups>conformance</fabrica.excludedGroups>
+    <errorprone.version>2.36.0</errorprone.version>
+    <google-java-format.version>1.24.0</google-java-format.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>5.11.4</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.jqwik</groupId>
+      <artifactId>jqwik</artifactId>
+      <version>1.9.2</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <directory>${fabrica.buildDir}</directory>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>3.4.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>3.3.1</version>
+      </plugin>
+      <plugin>
+        <!-- Lint: javac -Xlint:all and Error Prone, warnings are errors; doclint on the public API. -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <release>21</release>
+          <compilerArgs>
+            <arg>-XDcompilePolicy=simple</arg>
+            <arg>--should-stop=ifError=FLOW</arg>
+            <arg>-Xplugin:ErrorProne</arg>
+            <arg>-Xlint:all,-processing</arg>
+            <arg>-Werror</arg>
+          </compilerArgs>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>com.google.errorprone</groupId>
+              <artifactId>error_prone_core</artifactId>
+              <version>${errorprone.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+        <executions>
+          <execution>
+            <id>default-compile</id>
+            <configuration>
+              <compilerArgs combine.children="append">
+                <arg>-Xdoclint:all/protected</arg>
+              </compilerArgs>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.2</version>
+        <configuration>
+          <excludedGroups>${fabrica.excludedGroups}</excludedGroups>
+          <failIfNoTests>true</failIfNoTests>
+          <properties>
+            <!-- jqwik keeps failing samples in a database (kept with the build output) and reports
+                 only failing properties. -->
+            <configurationParameters>
+              jqwik.database = ${fabrica.buildDir}/jqwik-database
+              jqwik.reporting.onlyfailures = true
+            </configurationParameters>
+          </properties>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.12</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <!-- scripts/Check.java reads site/jacoco/jacoco.csv and enforces the line coverage threshold. -->
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-install-plugin</artifactId>
+        <version>3.1.3</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <version>3.1.3</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>3.8.1</version>
+      </plugin>
+      <plugin>
+        <!-- Format: google-java-format through Spotless, over the library, its tests and scripts/. -->
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>2.43.0</version>
+        <configuration>
+          <java>
+            <includes>
+              <include>src/main/java/**/*.java</include>
+              <include>src/test/java/**/*.java</include>
+              <include>scripts/*.java</include>
+            </includes>
+            <googleJavaFormat>
+              <version>${google-java-format.version}</version>
+              <style>GOOGLE</style>
+            </googleJavaFormat>
+          </java>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>fabrica-build-dir</id>
+      <activation>
+        <property>
+          <name>env.FABRICA_BUILD_DIR</name>
+        </property>
+      </activation>
+      <properties>
+        <fabrica.buildDir>${env.FABRICA_BUILD_DIR}</fabrica.buildDir>
+      </properties>
+    </profile>
+  </profiles>
+</project>

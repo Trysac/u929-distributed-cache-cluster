@@ -1,0 +1,18 @@
+# Build output
+/target/
+
+# Coverage and property-test samples
+jacoco.exec
+.jqwik-database
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# Local environment
+.env
+.env.*
+!.env.example

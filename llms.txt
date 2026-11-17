@@ -1,0 +1,16 @@
+# distributed-cache-cluster
+
+> Replicated in-memory cache cluster with consistent hashing, SWIM-style gossip membership, quorum reads and writes and rebalancing, tested under a seeded fault-injecting network simulator Maven artifact `io.github.trysac:distributed-cache-cluster`, Java package
+> `io.github.trysac.distributed_cache_cluster`, MIT licensed, Java >= 21, standard library only.
+
+## Docs
+
+- [README](README.md): problem, install, usage example
+- [AGENTS](AGENTS.md): commands, folder map, conventions, limits
+- [Architecture](docs/ARCHITECTURE.md): shape of the library and its public API
+- [Testing](docs/TESTING.md): how to run and extend the tests
+
+## Optional
+
+- [Stack](docs/STACK.md): tools used and discarded
+- [Changelog](CHANGELOG.md): release history

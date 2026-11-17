@@ -1,0 +1,1 @@
+{"lang": "java", "package": "io.github.trysac:distributed-cache-cluster", "commands": {"install": [["mvn", "--batch-mode", "--no-transfer-progress", "--quiet", "dependency:go-offline"]], "check": [["java", "scripts/Check.java"]]}}
