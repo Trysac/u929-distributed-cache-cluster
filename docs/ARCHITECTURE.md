@@ -1,31 +1,14 @@
 # Architecture
 
-## Purpose
+## Overview
 
-`io.github.trysac:distributed-cache-cluster` is a small, dependency-free Java library: Replicated in-memory cache cluster with consistent hashing, SWIM-style gossip membership, quorum reads and writes and rebalancing, tested under a seeded fault-injecting network simulator
+`io.github.trysac.distributed_cache_cluster` implements a deterministic, in-process replicated cache cluster. It is decoupled from I/O via the `Transport` interface.
 
-## Shape
+## Components
 
-```text
-caller code --> package io.github.trysac.distributed_cache_cluster (src/main/java)
-                    |
-                    +-- final classes with static, pure functions; no I/O, no global mutable state
-                    +-- package-private helpers (optional)
-```
-
-- **Public API**: every `public` class and member of the package. Package-private classes may
-  change without a major version.
-- **Errors**: invalid input throws an `IllegalArgumentException` subclass of the library (such as
-  `BlankInputException`) documented with `@throws`; null arguments throw `NullPointerException`.
-  The library never prints or exits.
-- **Side effects**: none. If a feature needs I/O, accept an `InputStream`, a `Reader` or a small
-  interface instead of opening resources, and record the choice in an ADR.
-
-## Quality contract
-
-`scripts/Check.java` is the single definition of the gates; `fabrica.json` tells the factory and CI
-how to run it. See [TESTING.md](TESTING.md).
-
-## Decisions
-
-Architecture decisions are recorded in [decisions/](decisions/) as numbered ADRs.
+1. **`HashRing`**: Implements 64-bit FNV-1a hashing on `nodeId + '#' + index` to place nodes on the ring. It calculates the preference list of physical nodes for a given key.
+2. **`SimulatedNetwork` & `Transport`**: A discrete-event simulator that provides virtual time. The `tick()` method drives the protocol, delivering messages and triggering rebalancing/probing.
+3. **`CacheNode`**:
+   - **SWIM Membership**: Uses `PING`/`PING_REQ` probes and piggybacked gossip updates to track node states (`alive`, `suspect`, `dead`).
+   - **Quorum Replication**: Implements (N, W, R) quorums with last-writer-wins versioning (Lamport timestamp + writer ID). 
+   - **Rebalancing**: Queues keys for migration in batches of 100 per tick when ring membership changes.
