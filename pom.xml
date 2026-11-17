@@ -38,7 +38,7 @@
     <!-- CI-only conformance tier: tests tagged @Tag("conformance") are excluded unless scripts/Check.java runs
          with FABRICA_CI=1, which replaces this value. -->
     <fabrica.excludedGroups>conformance</fabrica.excludedGroups>
-    <errorprone.version>2.36.0</errorprone.version>
+    <errorprone.version>2.52.0</errorprone.version>
     <google-java-format.version>1.24.0</google-java-format.version>
   </properties>
 
@@ -63,7 +63,7 @@
     <dependency>
       <groupId>net.jqwik</groupId>
       <artifactId>jqwik</artifactId>
-      <version>1.9.2</version>
+      <version>1.10.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -74,18 +74,18 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-clean-plugin</artifactId>
-        <version>3.4.0</version>
+        <version>3.5.0</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
-        <version>3.3.1</version>
+        <version>3.5.0</version>
       </plugin>
       <plugin>
         <!-- Lint: javac -Xlint:all and Error Prone, warnings are errors; doclint on the public API. -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.13.0</version>
+        <version>3.16.0</version>
         <configuration>
           <release>21</release>
           <compilerArgs>
@@ -117,7 +117,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.5.2</version>
+        <version>3.6.1</version>
         <configuration>
           <excludedGroups>${fabrica.excludedGroups}</excludedGroups>
           <failIfNoTests>true</failIfNoTests>
@@ -134,7 +134,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.12</version>
+        <version>0.8.16</version>
         <executions>
           <execution>
             <id>prepare-agent</id>
@@ -155,22 +155,22 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>3.4.2</version>
+        <version>3.5.1</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-install-plugin</artifactId>
-        <version>3.1.3</version>
+        <version>3.2.0</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
-        <version>3.1.3</version>
+        <version>3.2.0</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
-        <version>3.8.1</version>
+        <version>3.11.0</version>
       </plugin>
       <plugin>
         <!-- Format: google-java-format through Spotless, over the library, its tests and scripts/. -->
